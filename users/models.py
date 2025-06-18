@@ -1,11 +1,14 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
+from users.managers import UserManager
+
 
 class User(AbstractUser):
     """Модель пользователя, наследованная от абстрактного класса AbstractUser. Хранит информацию о пользователе.
     Авторизация заменена на поле: email"""
 
+    username = None
     email = models.EmailField(unique=True,
                               verbose_name='Email',
                               help_text='Укажите почту')
@@ -26,6 +29,8 @@ class User(AbstractUser):
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
+
+    objects = UserManager()
 
     class Meta:
         verbose_name = 'Пользователь'

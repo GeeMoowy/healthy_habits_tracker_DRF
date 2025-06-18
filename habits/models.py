@@ -6,7 +6,7 @@ from django.core.validators import MinValueValidator
 User = get_user_model()
 
 
-class Habits(models.Model):
+class Habit(models.Model):
     """"""
 
     DAILY = 'daily'
