@@ -31,3 +31,32 @@ class UserSerializer(serializers.ModelSerializer):
             city=validated_data.get('city')
         )
         return user
+
+
+class UserRegistrationSerializer(serializers.ModelSerializer):
+    """Сериалайзер для эндпоинта регистрации"""
+
+    password = serializers.CharField(write_only=True, required=True)
+    password_confirmation = serializers.CharField(write_only=True, required=True)
+
+    class Meta:
+        model = User
+        fields = ['email', 'password', 'password_confirmation', 'first_name', 'last_name', 'phone_number', 'city']
+        extra_kwargs = {
+            'email': {'required': True},
+            'first_name': {'required': False},
+            'last_name': {'required': False},
+        }
+
+    def validate(self, data):
+        """Валидация ввода пароля"""
+
+        if data['password'] != data['password_confirmation']:
+            raise serializers.ValidationError("Пароли не совпадают")
+        return data
+
+    def create(self, validated_data):
+        """Метод, который удаляет поле 'password_confirmation', создает пользователя с хешированием пароля"""
+
+        validated_data.pop('password_confirmation')
+        return User.objects.create_user(**validated_data)

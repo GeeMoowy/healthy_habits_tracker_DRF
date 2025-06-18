@@ -1,7 +1,7 @@
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.contrib.auth import get_user_model
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 User = get_user_model()
 
@@ -73,9 +73,12 @@ class Habit(models.Model):
     )
 
     time_to_complete = models.PositiveIntegerField(
-        validators=[MinValueValidator(1)],
+        validators=[
+            MinValueValidator(1, message="Время выполнения должно быть не менее 1 минуты"),
+            MaxValueValidator(120, message="Время выполнения не должно превышать 120 минут")
+        ],
         verbose_name='Время на выполнение (в минутах)',
-        help_text='Время, которое предположительно потратит пользователь на выполнение привычки'
+        help_text='Время, которое предположительно потратит пользователь на выполнение привычки (1-120 минут)'
     )
 
     is_public = models.BooleanField(
