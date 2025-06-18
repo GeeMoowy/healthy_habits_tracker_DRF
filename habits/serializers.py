@@ -33,3 +33,21 @@ class HabitSerializer(ModelSerializer):
 
     def get_periodicity_display(self, obj):
         return obj.periodicity_display
+
+    def validate(self, data):
+        """Валидация на уровне сериализатора"""
+
+        is_pleasant = data.get('is_pleasant', False)
+        reward = data.get('reward')
+        related_habit = data.get('related_habit')
+
+        if is_pleasant and reward:
+            raise serializers.ValidationError("У приятной привычки не может быть вознаграждения")
+
+        if is_pleasant and related_habit:
+            raise serializers.ValidationError("У приятной привычки не может быть связанной привычки")
+
+        if related_habit and not related_habit.is_pleasant:
+            raise serializers.ValidationError("Связанная привычка должна быть приятной")
+
+        return data
