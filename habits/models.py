@@ -1,3 +1,5 @@
+from typing import Optional
+
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.contrib.auth import get_user_model
@@ -8,14 +10,6 @@ User = get_user_model()
 
 class Habit(models.Model):
     """"""
-
-    DAILY = 'daily'
-    WEEKLY = 'weekly'
-
-    PERIODICITY_CHOICES = [
-        (DAILY, 'Ежедневная'),
-        (WEEKLY, 'Еженедельная'),
-    ]
 
     user = models.ForeignKey(
         User,
@@ -46,7 +40,7 @@ class Habit(models.Model):
         help_text='Отметьте, является ли эта привычка приятной'
     )
 
-    related_habit = models.ForeignKey(
+    related_habit: Optional['Habit'] = models.ForeignKey(
         'self',
         on_delete=models.SET_NULL,
         null=True,
@@ -56,12 +50,14 @@ class Habit(models.Model):
         help_text='Привычка, которая связана с другой привычкой. Указывать только для полезных привычек'
     )
 
-    periodicity = models.CharField(
-        max_length=10,
-        choices=PERIODICITY_CHOICES,
-        default=DAILY,
-        verbose_name='Периодичность выполнения',
-        help_text='Периодичность выполнения привычки для напоминания в днях'
+    periodicity_days = models.PositiveSmallIntegerField(
+        default=1,
+        validators=[
+            MinValueValidator(1, message="Периодичность не может быть меньше 1 дня"),
+            MaxValueValidator(7, message="Нельзя выполнять привычку реже чем 1 раз в 7 дней")
+        ],
+        verbose_name='Периодичность (в днях)',
+        help_text='Интервал в днях между выполнениями привычки (1-7 дней)'
     )
 
     reward = models.CharField(
@@ -97,6 +93,18 @@ class Habit(models.Model):
             raise ValidationError("У приятной привычки не может быть связанной привычки.")
         if self.is_pleasant and self.reward:
             raise ValidationError("У приятной привычки не может быть вознаграждения.")
+        if self.related_habit and not self.related_habit.is_pleasant:
+            raise ValidationError("Связанная привычка должна быть приятной (is_pleasant=True)")
+        if not 1 <= self.periodicity_days <= 7:
+            raise ValidationError("Периодичность должна быть от 1 до 7 дней")
+
+    @property
+    def periodicity_display(self):
+        if self.periodicity_days == 1:
+            return "Ежедневно"
+        elif self.periodicity_days == 7:
+            return "Еженедельно"
+        return f"Каждые {self.periodicity_days} дня(ей)"
 
     class Meta:
         verbose_name = 'Привычка'
