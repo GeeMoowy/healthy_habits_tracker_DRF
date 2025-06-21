@@ -26,6 +26,11 @@ class User(AbstractUser):
                             null=True,
                             blank=True,
                             help_text='Укажите город')
+    tg_chat_id = models.CharField(max_length=50,
+                                  verbose_name='Телеграм chat-id',
+                                  null=True,
+                                  blank=True,
+                                  help_text='Укажите Телеграм chat-id')
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []

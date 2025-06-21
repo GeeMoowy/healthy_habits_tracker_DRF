@@ -1,6 +1,8 @@
 import os
 from datetime import timedelta
 from pathlib import Path
+
+from celery.schedules import crontab
 from dotenv import load_dotenv
 
 
@@ -25,6 +27,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'users',
     'habits',
+    'django_celery_beat',
 ]
 
 REST_FRAMEWORK = {
@@ -114,3 +117,9 @@ MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'users.User'
+
+CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL')
+CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND')
+
+TELEGRAM_URL = 'https://api.telegram.org/bot'
+TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
