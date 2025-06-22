@@ -20,6 +20,7 @@ django-celery-beat = "^2.8.1"
 requests = "^2.32.4"
 django-cors-headers = "^4.7.0"
 drf-yasg = "^1.21.10"
+flake8 = "^7.3.0"
 
 [build-system]
 requires = ["poetry-core"]

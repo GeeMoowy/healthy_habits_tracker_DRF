@@ -1,11 +1,9 @@
 import requests
 import logging
-from django.conf import settings
-
-
-logger = logging.getLogger(__name__)
 
 from config import settings
+
+logger = logging.getLogger(__name__)
 
 
 def send_tg_message(chat_id, message):

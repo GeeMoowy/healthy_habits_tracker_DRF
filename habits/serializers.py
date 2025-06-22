@@ -24,6 +24,7 @@ class HabitSerializer(ModelSerializer):
             MaxValueValidator(120)
         ]
     )
+
     class Meta:
         model = Habit
         fields = '__all__'

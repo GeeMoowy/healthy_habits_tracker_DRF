@@ -1,5 +1,6 @@
 from rest_framework.pagination import PageNumberPagination
 
+
 class HabitsPagination(PageNumberPagination):
     """Кастомная пагинация для списка привычек.
     Добавляет:
