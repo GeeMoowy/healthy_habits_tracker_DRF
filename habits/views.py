@@ -9,7 +9,10 @@ from users.permissions import IsOwner
 
 
 class HabitsViewSet(ModelViewSet):
-    """"""
+    """ViewSet для работы с привычками пользователя. Обеспечивает CRUD операции для привычек с учетом:
+    - Авторизации пользователей
+    - Разделения доступа к приватным/публичным привычкам
+    - Автоматического назначения владельца при создании"""
 
     serializer_class = HabitSerializer
     pagination_class = HabitsPagination

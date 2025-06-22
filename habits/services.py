@@ -9,6 +9,17 @@ from config import settings
 
 
 def send_tg_message(chat_id, message):
+    """Отправляет сообщение пользователю в Telegram через бота.
+    Функция выполняет HTTP-запрос к Telegram Bot API для отправки сообщения указанному пользователю.
+    Включает обработку ошибок и логирование.
+        Аргументы:
+            chat_id (int): Идентификатор чата пользователя в Telegram.
+                          Должен быть действительным Telegram chat_id
+            message (str): Текст сообщения для отправки. Не должен быть пустым
+
+        Возвращает результат операции отправки:
+            - True: сообщение успешно отправлено
+            - False: произошла ошибка при отправке"""
 
     if not chat_id or not message:
         logger.error(f"Неверные параметры: chat_id={chat_id}, message={message}")
