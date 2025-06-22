@@ -52,7 +52,7 @@ class HabitTestCase(APITestCase):
             time_to_complete=15,
             periodicity_days=2,
             is_pleasant=True,
-            is_public = False
+            is_public=False
         )
 
     def test_list_habits(self):
