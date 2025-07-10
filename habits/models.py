@@ -1,0 +1,143 @@
+from typing import Optional
+
+from django.core.exceptions import ValidationError
+from django.db import models
+from django.contrib.auth import get_user_model
+from django.core.validators import MinValueValidator, MaxValueValidator
+
+User = get_user_model()
+
+
+class Habit(models.Model):
+    """Модель, представляющая привычку пользователя. Описывает поведенческую привычку с настройками выполнения:
+    - Где, когда и как часто выполнять
+    - Является ли привычка приятной или полезной
+    - Система вознаграждений и связанные привычки
+    - Настройки видимости для других пользователей
+
+    Поля:
+        user (ForeignKey): Владелец привычки (связь с User)
+        place (CharField): Место выполнения привычки
+        time (TimeField): Время выполнения (часы:минуты)
+        action (CharField): Описание действия привычки
+        is_pleasant (BooleanField): Признак приятной привычки
+        related_habit (ForeignKey): Связанная приятная привычка (для полезных привычек)
+        periodicity_days (PositiveSmallIntegerField): Периодичность выполнения (1-7 дней)
+        reward (CharField): Вознаграждение за выполнение
+        time_to_complete (PositiveIntegerField): Время на выполнение в минутах (1-120)
+        is_public (BooleanField): Доступна ли привычка другим пользователям"""
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='habits',
+        verbose_name='Пользователь — создатель привычки'
+    )
+
+    place = models.CharField(
+        max_length=255,
+        verbose_name='Место выполнения привычки',
+        help_text='Введите место, в котором необходимо выполнять привычку'
+    )
+
+    time = models.TimeField(
+        verbose_name='Время выполнения привычки',
+        help_text='Введите время, когда необходимо выполнять привычку'
+    )
+
+    action = models.CharField(
+        max_length=255,
+        verbose_name='Действие, которое представляет собой привычка',
+    )
+
+    is_pleasant = models.BooleanField(
+        default=False,
+        verbose_name='Признак приятной привычки',
+        help_text='Отметьте, является ли эта привычка приятной'
+    )
+
+    related_habit: Optional['Habit'] = models.ForeignKey(
+        'self',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name='Связанная привычка',
+        related_name='main_habit',
+        help_text='Привычка, которая связана с другой привычкой. Указывать только для полезных привычек'
+    )
+
+    periodicity_days = models.PositiveSmallIntegerField(
+        default=1,
+        validators=[
+            MinValueValidator(1, message="Периодичность не может быть меньше 1 дня"),
+            MaxValueValidator(7, message="Нельзя выполнять привычку реже чем 1 раз в 7 дней")
+        ],
+        verbose_name='Периодичность (в днях)',
+        help_text='Интервал в днях между выполнениями привычки (1-7 дней)'
+    )
+
+    reward = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        verbose_name='Вознаграждение после выполнения',
+        help_text='Чем пользователь должен себя вознаградить после выполнения'
+    )
+
+    time_to_complete = models.PositiveIntegerField(
+        validators=[
+            MinValueValidator(1, message="Время выполнения должно быть не менее 1 минуты"),
+            MaxValueValidator(120, message="Время выполнения не должно превышать 120 минут")
+        ],
+        verbose_name='Время на выполнение (в минутах)',
+        help_text='Время, которое предположительно потратит пользователь на выполнение привычки (1-120 минут)'
+    )
+
+    is_public = models.BooleanField(
+        default=False,
+        verbose_name='Признак публичности',
+        help_text='Отметьте, можно ли публиковать привычки в общий доступ'
+    )
+
+    def __str__(self):
+        """Строковое представление привычки.
+        Возвращает строку в формате: 'Действие в HH:MM (Место)'"""
+
+        return f"{self.action} в {self.time} ({self.place})"
+
+    def clean(self):
+        """Валидация модели перед сохранением.
+        Проверяет:
+            - Нельзя указывать и связанную привычку, и вознаграждение
+            - У приятной привычки не может быть связанной привычки или вознаграждения
+            - Связанная привычка должна быть приятной
+            - Периодичность должна быть от 1 до 7 дней"""
+
+        if self.related_habit and self.reward:
+            raise ValidationError("Нельзя указывать и связанную привычку, и вознаграждение.")
+        if self.is_pleasant and self.related_habit:
+            raise ValidationError("У приятной привычки не может быть связанной привычки.")
+        if self.is_pleasant and self.reward:
+            raise ValidationError("У приятной привычки не может быть вознаграждения.")
+        if self.related_habit and not self.related_habit.is_pleasant:
+            raise ValidationError("Связанная привычка должна быть приятной (is_pleasant=True)")
+        if not 1 <= self.periodicity_days <= 7:
+            raise ValidationError("Периодичность должна быть от 1 до 7 дней")
+
+    @property
+    def periodicity_display(self):
+        """Человеко-читаемое представление периодичности.
+        Возвращает строку описания периодичности на русском языке
+            "Ежедневно" для 1 дня
+            "Еженедельно" для 7 дней
+            "Каждые N дня(ей)" для остальных случаев"""
+
+        if self.periodicity_days == 1:
+            return "Ежедневно"
+        elif self.periodicity_days == 7:
+            return "Еженедельно"
+        return f"Каждые {self.periodicity_days} дня(ей)"
+
+    class Meta:
+        verbose_name = 'Привычка'
+        verbose_name_plural = 'Привычки'
